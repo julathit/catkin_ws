@@ -57,8 +57,7 @@ getbutton list
 
 class RobotController:
     def __init__(self):
-        if __name__ == "__main__":
-            rospy.init_node("robot_controller", anonymous=True)
+        rospy.init_node("robot_controller", anonymous=True)
         self.servo_pub = rospy.Publisher('servo_angle', servo_angle, queue_size=600)
         self.motor_pub = rospy.Publisher('drive_motor', drive_motor, queue_size=600)
         self.light_pub = rospy.Publisher('light_control', Bool, queue_size=600)
@@ -67,7 +66,10 @@ class RobotController:
         # Initialize pygame
         pygame.init()
         pygame.joystick.init()
-    
+        
+        # Set up a window for keyboard events
+        self.screen = pygame.display.set_mode((400, 300))
+        pygame.display.set_caption("Robot Controller")
 
         # Initialize joysticks
         self.joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
@@ -127,7 +129,10 @@ class RobotController:
         # rospy.logfatal(f"Motor value: {new_value}")
         setattr(self.motor, f'm_{motor_index + 1}', new_value)
 
-    def run(self,screen):
+    def run(self):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
 
             keys = pygame.key.get_pressed()
             
@@ -367,37 +372,38 @@ class RobotController:
             self.servo_pub.publish(self.angles)
             self.motor_pub.publish(self.motor)
             self.rate.sleep()
+
+            # Update display
+            # self.screen.fill((255, 255, 255))
             font = pygame.font.Font(None, 36)
-            text = font.render(f"Inverse Kinematic: {self.INVERSE_KINEMATIC}", True, (255, 255, 0))
-            screen.blit(text, (10, 10))
+            text = font.render(f"Inverse Kinematic: {self.INVERSE_KINEMATIC}", True, (0, 0, 0))
+            self.screen.blit(text, (10, 10))
             for i in range(4):
                 text = font.render(f"Servo {i+1}: {getattr(self.angles, f'servo_{i+1}')}", True, (0, 0, 0))
-                screen.blit(text, (10, 45 + i * 30))
+                self.screen.blit(text, (10, 45 + i * 30))
             for i in range(2):
                 text = font.render(f"Motor {i+1}: {getattr(self.motor, f'm_{i+1}')}", True, (0, 0, 0))
-                screen.blit(text, (10, 175 + i * 30))
+                self.screen.blit(text, (10, 175 + i * 30))
                 text = font.render(f"LIGHT: {self.LIGHT}", True, (0, 0, 0))
-                screen.blit(text, (10, 245))
-
+                self.screen.blit(text, (10, 245))
+            pygame.display.flip()
             
     def main(self):
-        # Set up a window for keyboard events
-        self.screen = pygame.display.set_mode((400, 300))
-        pygame.display.set_caption("Robot Controller")
-        while not rospy.is_shutdown():
-            self.screen.fill((255, 255, 255))
-            for event in pygame.event.get():
+        for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
-            self.run(self.screen)
-            # Update display
-            pygame.display.flip()
+        self.screen.fill((255, 255, 255))
+        self.run()
+        return True
+
 
 if __name__ == '__main__':
     try:
         rospy.loginfo("[START] robot_controller has been started")
         controller = RobotController()
-        controller.main()
+        while not rospy.is_shutdown():
+            if not controller.main():
+                break
     except rospy.ROSInterruptException:
         pass
     finally:

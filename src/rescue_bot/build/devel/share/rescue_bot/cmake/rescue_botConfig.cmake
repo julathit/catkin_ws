@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/rtx/GIT/catkin_ws/src/rescue_bot/build/devel/lib;/home/rtx/GIT/threeWayCom/devel/lib;/home/rtx/GIT/roscoreTest/devel/lib;/opt/ros/noetic/lib)
+    foreach(path /home/rtx/GIT/catkin_ws/src/rescue_bot/build/devel/lib;/home/rtx/GIT/catkin_ws/devel/lib;/home/rtx/GIT/threeWayCom/devel/lib;/home/rtx/GIT/roscoreTest/devel/lib;/opt/ros/noetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

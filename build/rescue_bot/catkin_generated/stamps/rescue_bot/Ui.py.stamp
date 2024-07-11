@@ -9,8 +9,7 @@ import pygame
 import sys
 from threading import Timer
 from Nframe import N_button as N
-from RescueBOT_controller_v1 import RobotController
-
+from . import RescueBOT_controller_v1 
 
 # Initialize Pygame
 pygame.init()
@@ -80,7 +79,7 @@ def main():
     image_subscriber.subscribe()
     terminateButton = N.button(screen,"P Terminate",(255, 0, 0))
     ledButton = N.button(screen,"led",(255,255,255))
-    R_controler = RobotController()
+    R_controler = RescueBOT_controller_v1.RobotController()
 
     while not rospy.is_shutdown():
         for event in pygame.event.get():
@@ -135,7 +134,7 @@ def main():
         # # Draw the Quit button
         # draw_button(screen, "P Terminate", 50, height + 10, 140, 30, (255, 0, 0))
 
-        R_controler.run(screen)
+        R_controler.run()
 
         pygame.display.flip()
 
