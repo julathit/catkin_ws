@@ -59,9 +59,9 @@ class RobotController:
     def __init__(self):
         if __name__ == "__main__":
             rospy.init_node("robot_controller", anonymous=True)
-        self.servo_pub = rospy.Publisher('servo_angle', servo_angle, queue_size=600)
-        self.motor_pub = rospy.Publisher('drive_motor', drive_motor, queue_size=600)
-        self.light_pub = rospy.Publisher('light_control', Bool, queue_size=600)
+        self.servo_pub = rospy.Publisher('servo_angle', servo_angle, queue_size=75)
+        self.motor_pub = rospy.Publisher('drive_motor', drive_motor, queue_size=75)
+        self.light_pub = rospy.Publisher('light_control', Bool, queue_size=75)
         self.rate = rospy.Rate(10)  # 30hz for smoother control
 
         # Initialize pygame
@@ -81,7 +81,7 @@ class RobotController:
         self.angles = servo_angle()
         self.angles.servo_1 = 45   # Start at middle position (0-180 range)
         self.angles.servo_2 = 60  # Start at middle position (0-270 range)
-        self.angles.servo_3 = 50   # Start at middle position (0-180 range)
+        self.angles.servo_3 = 90   # Start at middle position (0-180 range)
         self.angles.servo_4 = 0   # Start at middle position (0-180 range)
 
         # Initialize drive motor values
@@ -127,7 +127,7 @@ class RobotController:
         # rospy.logfatal(f"Motor value: {new_value}")
         setattr(self.motor, f'm_{motor_index + 1}', new_value)
 
-    def run(self,screen):
+    def run(self,screen,textColor = (0,0,0), Font = 35):
 
             keys = pygame.key.get_pressed()
             
@@ -187,10 +187,6 @@ class RobotController:
                 self.motor.m_2 = 0
             if keys[pygame.K_SLASH]:  # Toggle light
                 self.LIGHT = not self.LIGHT
-                if self.LIGHT:
-                    self.light_pub.publish(True)
-                else:
-                    self.light_pub.publish(False)
                 rospy.sleep(0.25)
 
             ### Joystick control ###
@@ -293,26 +289,22 @@ class RobotController:
                     self.angles.servo_2 = 60
                     self.angles.servo_3 = 50
                     # keep the same gripper (servo_4) position
-                if self.joysticks[0].get_button(7):  # Toggle light
+                if self.joysticks[0].get_button(7) or self.joysticks[1].get_button(7):  # Toggle light
                     self.LIGHT = not self.LIGHT
-                    if self.LIGHT:
-                        self.light_pub.publish(True)
-                    else:
-                        self.light_pub.publish(False)
                     rospy.sleep(0.25)
                 
                 # D-pad (Hat) control for driving control in servo's joystick
                 if (hat_control == (1,0)):  # right hat
                     rospy.logfatal("RIGHT")
                     ACTIVATE_SECOND_JOYSTICK = False
-                    self.update_motor(0, -0.355)
-                    self.update_motor(1, 0.355)
+                    self.update_motor(0, 0.355)
+                    self.update_motor(1, -0.355)
                     self.motor_pub.publish(self.motor)
                 elif (hat_control == (-1,0)):  # left hat
                     rospy.logfatal("LEFT")
                     ACTIVATE_SECOND_JOYSTICK = False
-                    self.update_motor(0, 0.355)
-                    self.update_motor(1, -0.355)
+                    self.update_motor(0, -0.355)
+                    self.update_motor(1, 0.355)
                     self.motor_pub.publish(self.motor)
                 elif (hat_control == (0,1)):  # up hat
                     rospy.logfatal("UP")
@@ -360,6 +352,11 @@ class RobotController:
                         self.update_motor(0, 0.355)
                         self.update_motor(1, -0.355)
                         self.motor_pub.publish(self.motor)
+            
+            if self.LIGHT:
+                self.light_pub.publish(True)
+            else:
+                self.light_pub.publish(False)
 
             # Publish servo angles and motor values
             rospy.loginfo(f"Servos: {self.angles}")
@@ -367,16 +364,16 @@ class RobotController:
             self.servo_pub.publish(self.angles)
             self.motor_pub.publish(self.motor)
             self.rate.sleep()
-            font = pygame.font.Font(None, 36)
-            text = font.render(f"Inverse Kinematic: {self.INVERSE_KINEMATIC}", True, (255, 255, 0))
+            font = pygame.font.Font(None, Font)
+            text = font.render(f"Inverse Kinematic: {self.INVERSE_KINEMATIC}", True, textColor)
             screen.blit(text, (10, 10))
             for i in range(4):
-                text = font.render(f"Servo {i+1}: {getattr(self.angles, f'servo_{i+1}')}", True, (0, 0, 0))
+                text = font.render(f"Servo {i+1}: {getattr(self.angles, f'servo_{i+1}')}", True, textColor)
                 screen.blit(text, (10, 45 + i * 30))
             for i in range(2):
-                text = font.render(f"Motor {i+1}: {getattr(self.motor, f'm_{i+1}')}", True, (0, 0, 0))
+                text = font.render(f"Motor {i+1}: {getattr(self.motor, f'm_{i+1}')}", True, textColor)
                 screen.blit(text, (10, 175 + i * 30))
-                text = font.render(f"LIGHT: {self.LIGHT}", True, (0, 0, 0))
+                text = font.render(f"LIGHT: {self.LIGHT}", True, textColor)
                 screen.blit(text, (10, 245))
 
             

@@ -135,7 +135,7 @@ def main():
         # # Draw the Quit button
         # draw_button(screen, "P Terminate", 50, height + 10, 140, 30, (255, 0, 0))
 
-        R_controler.run(screen)
+        R_controler.run(screen,(127,255,0))
 
         pygame.display.flip()
 
